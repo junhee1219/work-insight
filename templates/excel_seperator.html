@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>엑셀 쪼개기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='excel_seperator_styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>엑셀 쪼개기 기능</h1>
+    </header>
+
+    <main>
+        <!-- 엑셀 파일 업로드 -->
+        <section class="upload-section">
+            <h2>엑셀 파일 업로드</h2>
+            <form id="excel-upload-form" enctype="multipart/form-data">
+                <input type="file" id="excel-file" name="excel-file" accept=".xls,.xlsx" required>
+                <button type="submit" class="action-button" disabled>업로드</button>
+            </form>
+        </section>
+
+        <!-- 로딩 애니메이션 -->
+        <section id="loading-section" class="loading hidden">
+            <div class="spinner"></div>
+            <p>파일을 처리 중입니다. 잠시만 기다려주세요...</p>
+        </section>
+
+        <!-- 시트 목록 표시 및 쪼개기 설정 폼 -->
+        <section id="sheet-list-section" class="hidden">
+            <h2>시트별 설정</h2>
+            <form id="split-settings-form">
+                <!-- 서버에서 동적으로 시트와 관련된 필드가 여기에 추가됨 -->
+            </form>
+            <button id="split-button" class="action-button hidden">쪼개기</button>
+        </section>
+
+        <!-- 로딩 애니메이션 (쪼개기 작업 중) -->
+        <section id="splitting-loading-section" class="loading hidden">
+            <div class="spinner"></div>
+            <p>파일을 쪼개는 중입니다. 잠시만 기다려주세요...</p>
+        </section>
+
+        <!-- 다운로드 링크 -->
+        <section id="download-section" class="hidden">
+            <h2>파일 다운로드</h2>
+            <a id="download-link" href="#" class="action-button" download>다운로드</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>문의: <a href="mailto:leejunhee1219@kakao.com">leejunhee1219@kakao.com</a></p>
+    </footer>
+    <script src="{{ url_for('static', filename='excel_scripts.js') }}"></script>
+</body>
+</html>

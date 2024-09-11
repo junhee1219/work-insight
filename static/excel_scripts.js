@@ -1,0 +1,154 @@
+// DOM 요소 참조
+const fileInput = document.getElementById('excel-file');
+const uploadButton = document.querySelector('button[type="submit"]');
+const loadingSection = document.getElementById('loading-section');
+const sheetListSection = document.getElementById('sheet-list-section');
+const splitSettingsForm = document.getElementById('split-settings-form');
+const splitButton = document.getElementById('split-button');
+const splittingLoadingSection = document.getElementById('splitting-loading-section');
+const downloadSection = document.getElementById('download-section');
+const downloadLink = document.getElementById('download-link');
+
+// 처음 로드 시 업로드 버튼 비활성화
+uploadButton.disabled = true;
+
+// 파일 선택 시 업로드 버튼 활성화
+fileInput.addEventListener('change', function() {
+    if (fileInput.files.length > 0) {
+        uploadButton.disabled = false;
+    } else {
+        uploadButton.disabled = true;
+    }
+});
+
+// 파일 업로드 폼 제출 시 동작
+document.getElementById('excel-upload-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // 로딩 애니메이션 표시
+    loadingSection.classList.remove('hidden');
+    uploadButton.disabled = true;
+
+    const fileInput = document.getElementById('excel-file');
+    const file = fileInput.files[0];  // 파일 참조
+
+    if (!file) {
+        alert('파일을 선택해주세요.');
+        loadingSection.classList.add('hidden');
+        uploadButton.disabled = false;
+        return;
+    }
+
+    const reader = new FileReader();
+
+    // 파일 읽기 완료 시 동작
+    reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        // 시트 이름 가져오기
+        const sheetNames = workbook.SheetNames;
+
+        // 각 시트의 데이터가 있는 컬럼(A, B, C...) 추출
+        sheetNames.forEach(sheetName => {
+            const worksheet = workbook.Sheets[sheetName];
+            const ref = XLSX.utils.decode_range(worksheet['!ref']);  // 시트의 전체 범위 가져오기
+            const columns = [];
+            
+            // 데이터가 있는 컬럼을 추출 (알파벳 표기 A, B, C...)
+            for (let col = ref.s.c; col <= ref.e.c; col++) {
+                const colName = XLSX.utils.encode_col(col);  // A, B, C 등 컬럼명 추출
+                columns.push(colName);  // 컬럼명 추가
+            }
+
+            // 동적으로 시트별 폼 추가
+            addSheetSetting(sheetName, columns);
+        });
+
+        // 시트 설정 섹션 표시
+        document.getElementById('sheet-list-section').classList.remove('hidden');
+
+        // 로딩 애니메이션 숨기기
+        loadingSection.classList.add('hidden');
+        
+        // 시트 설정 폼과 쪼개기 버튼 표시
+        sheetListSection.classList.remove('hidden');
+        splitButton.classList.remove('hidden');
+        uploadButton.disabled = false;
+    };
+
+    // 파일 읽기 시작
+    reader.readAsArrayBuffer(file);
+});
+
+
+// 쪼개기 버튼 클릭 시
+splitButton.addEventListener('click', function() {
+    // 시트별 설정 데이터 수집 및 서버로 전송
+    const sheetSettings = [];
+    const sheetNames = ['Sheet1', 'Sheet2', 'Sheet3']; // 서버에서 받은 시트 목록
+    
+    sheetNames.forEach((sheetName, index) => {
+        const criteria = document.getElementById(`criteria-${index}`).value;
+        const startRow = document.getElementById(`start-row-${index}`).value;
+        sheetSettings.push({ sheetName, criteria, startRow });
+    });
+
+    // 로딩 애니메이션 (쪼개기 작업 중) 표시
+    sheetListSection.classList.add('hidden');
+    splitButton.classList.add('hidden');
+    splittingLoadingSection.classList.remove('hidden');
+
+    // 서버에 시트 설정 전송 후 파일 다운로드 링크 제공 (데모)
+    setTimeout(() => {
+        // 로딩 애니메이션 숨기기
+        splittingLoadingSection.classList.add('hidden');
+
+        // 다운로드 링크 표시
+        downloadSection.classList.remove('hidden');
+        downloadLink.href = '/path/to/splitted-file.zip'; // 실제 파일 경로로 대체
+    }, 5000);  // 서버에서 처리하는 시간을 시뮬레이션 (5초)
+});
+
+function addSheetSetting(sheetName, columns) {
+    const div = document.createElement('div');
+    div.classList.add('sheet-setting');
+    div.innerHTML = `
+        <div class="sheet-header">
+            <h3>${sheetName}</h3>
+            <label class="toggle-label">
+                <input type="checkbox" id="toggle-${sheetName}" checked>
+                <span class="slider"></span>
+                <span class="toggle-description">쪼개기</span> <!-- 토글 버튼 옆에 설명 추가 -->
+            </label>
+        </div>
+        <div id="setting-${sheetName}">
+            <label for="criteria-${sheetName}">기준 컬럼:</label>
+            <select id="criteria-${sheetName}">
+                ${columns.map(col => `<option value="${col}">${col}</option>`).join('')}
+            </select>
+            <label for="start-row-${sheetName}">시작 행:</label>
+            <input type="number" id="start-row-${sheetName}" value="1" min="1">
+        </div>
+    `;
+
+    document.getElementById('split-settings-form').appendChild(div);
+
+    // 토글 스위치가 변경되면 컬럼 선택과 시작 행이 활성화/비활성화 됨
+    const toggle = document.getElementById(`toggle-${sheetName}`);
+    const settingsDiv = document.getElementById(`setting-${sheetName}`);
+
+    toggle.addEventListener('change', function() {
+        if (this.checked) {
+            // 쪼개기 대상일 경우 활성화
+            settingsDiv.querySelector('select').disabled = false;
+            settingsDiv.querySelector('input[type="number"]').disabled = false;
+        } else {
+            // 쪼개기 대상이 아닐 경우 비활성화
+            settingsDiv.querySelector('select').disabled = true;
+            settingsDiv.querySelector('input[type="number"]').disabled = true;
+        }
+    });
+}
+
+
