@@ -19,7 +19,17 @@
         <section class="upload-section">
             <h2>엑셀 파일 업로드</h2>
             <form id="excel-upload-form" enctype="multipart/form-data">
-                <input type="file" id="excel-file" name="excel-file" accept=".xls,.xlsx" required>
+                <div id="drop-zone" style="border: 2px dashed #ccc; padding: 20px; margin: 20px; text-align: center;">
+                    <p id="file-description">파일을 여기에 드래그 앤 드롭하거나 클릭하여 파일을 선택하세요.</p>
+                    <input type="file" id="excel-file" name="excel-file" accept=".xls,.xlsx" style="display: none;" required>
+                    <div id="file-info" style="display: none;">
+                        <img id="file-icon" src="{{ url_for('static', filename='file_icon.png') }}" style="width: 30px; height: 30px; margin-right:10px"alt="파일 아이콘">
+                        <p>
+                            <span id="file-name">파일명: </span>
+                            <span id="file-size">파일 크기: </span>
+                        </p>
+                    </div>
+                </div>
                 <button type="submit" class="action-button" disabled>업로드</button>
             </form>
         </section>

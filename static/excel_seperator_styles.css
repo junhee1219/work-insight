@@ -266,7 +266,7 @@ footer {
     cursor: pointer;
     outline: none;
     transition: background-color 0.2s ease;
-    margin-right: 10px; /* 토글 버튼과 설명 간의 간격 */
+    margin-left: 10px; /* 토글 버튼과 설명 간의 간격 */
 }
 
 .toggle-label input[type="checkbox"]:checked {
@@ -292,7 +292,7 @@ footer {
 .toggle-description {
     font-size: 1rem;
     color: white;
-    margin-left: 10px;
+    margin-right: 10px;
 }
 
 /* 시트별 설정 영역 구분 */
@@ -330,4 +330,10 @@ footer {
     color: white;
     margin-right: 10px;
     width: 100px;
+}
+
+.dragover {
+    border: 2px dashed #007bff;
+    background-color: #f0f8ff;
+    margin-bottom: 10px;
 }
