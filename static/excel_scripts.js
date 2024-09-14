@@ -1,3 +1,5 @@
+let fileBlob = null;  // 파일 데이터를 저장할 변수
+
 // DOM 요소 참조
 const fileInput = document.getElementById('excel-file');
 const uploadButton = document.querySelector('button[type="submit"]');
@@ -18,6 +20,8 @@ const fileDescription = document.getElementById('file-description');
 
 // 처음 로드 시 업로드 버튼 비활성화
 uploadButton.disabled = true;
+uploadButton.classList.add('hidden');
+downloadSection.classList.add('hidden');
 
 
 dropZone.addEventListener('dragover', (event) => {
@@ -50,8 +54,11 @@ fileInput.addEventListener('change', function() {
     const files = fileInput.files;
     if(fileValidation(files)){
         uploadButton.disabled = false;
+        uploadButton.classList.remove('hidden');
+        downloadSection.classList.add('hidden');
         displayFileInfo(files[0]);
     } else{
+        uploadButton.classList.add('hidden');
         uploadButton.disabled = true;
     }
 });
@@ -81,10 +88,10 @@ function displayFileInfo(file) {
 }
 
 
-// 파일 업로드 폼 제출 시 동작
+// 파일 읽기 폼 제출 시 동작
 document.getElementById('excel-upload-form').addEventListener('submit', function(e) {
     e.preventDefault();
-
+    downloadSection.classList.add('hidden');
     // 로딩 애니메이션 표시
     loadingSection.classList.remove('hidden');
     uploadButton.disabled = true;
@@ -126,7 +133,6 @@ document.getElementById('excel-upload-form').addEventListener('submit', function
 
                 // 동적으로 시트별 폼 추가
                 addSheetSetting(sheetName, columns);
-                console.log(sheetName, columns);
             });
 
             // 시트 설정 섹션 표시
@@ -151,27 +157,43 @@ document.getElementById('excel-upload-form').addEventListener('submit', function
 
 // 쪼개기 버튼 클릭 시
 splitButton.addEventListener('click', function() {
-    const form = document.getElementById('split-settings-form');
-    const formData = new FormData(form);
-
-    const sheetSettings = getFormData();
-    
-    console.log(sheetSettings);
+    const formData = getFormData();
+    console.log(formData);
 
     // 로딩 애니메이션 (쪼개기 작업 중) 표시
     sheetListSection.classList.add('hidden');
     splitButton.classList.add('hidden');
     splittingLoadingSection.classList.remove('hidden');
 
-    // 서버에 시트 설정 전송 후 파일 다운로드 링크 제공 (데모)
-    setTimeout(() => {
-        // 로딩 애니메이션 숨기기
+    // 서버에 POST 요청
+    fetch('/split-excel', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('서버와의 연결이 원활하지 않습니다.');
+        }
+        return response.blob();  // 파일 데이터를 Blob으로 변환
+    })
+    .then(blob => {
+        fileBlob = blob;  // 받아온 파일 데이터를 전역 변수에 저장
+        const url = window.URL.createObjectURL(fileBlob);
+        let downloadFileName = "result.zip";
+        try {
+            downloadFileName = fileName.textContent.split("파일명: ")[1].split(".")[0] + ".zip";  // 파일명만 추출
+        } catch (error) {
+            console.log(error);
+        }
+        downloadLink.href = url;
         splittingLoadingSection.classList.add('hidden');
-
-        // 다운로드 링크 표시
         downloadSection.classList.remove('hidden');
-        downloadLink.href = '/path/to/splitted-file.zip'; // 실제 파일 경로로 대체
-    }, 1000);  // 서버에서 처리하는 시간을 시뮬레이션 (5초)
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('파일 쪼개기 중 오류가 발생했습니다.');
+        splittingLoadingSection.classList.add('hidden');
+    });
 });
 
 function addSheetSetting(sheetName, columns) {    
@@ -228,12 +250,15 @@ function getFormData() {
     const form = document.getElementById('split-settings-form');
     const formData = new FormData(form);
 
+    const file = fileInput.files[0];
+    formData.append('file', file);  // 'file'은 서버에서 받을 필드명
+    
     const sheetSettings = [];  // 최종적으로 서버에 보낼 리스트
 
     // 모든 시트 설정 폼 데이터를 가져오기
     document.querySelectorAll('.sheet-setting').forEach(div => {
         const sheetName = div.querySelector('h3').innerText;  // 시트 이름
-        const splitToggle = formData.get(`toggle-${sheetName}`) ? true : false;  // 쪼개기 여부 (체크박스)
+        const splitToggle = formData.get(`toggle-${sheetName}`) ? 1 : 0;  // 쪼개기 여부 (체크박스)
         const criteriaColumn = formData.get(`select-${sheetName}`);  // 기준 컬럼
         const startRow = formData.get(`start-${sheetName}`);  // 시작 행
 
@@ -247,6 +272,7 @@ function getFormData() {
 
         sheetSettings.push(sheetSetting);
     });
-
-    return sheetSettings;
+    formData.append('sheets', JSON.stringify(sheetSettings));
+    return formData;
 }
+
