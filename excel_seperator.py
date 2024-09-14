@@ -44,7 +44,12 @@ def split_main(filename, target_column_list, start_row_list):
         
     # split_data로부터 각 파일 생성 , 분리
     for split_name in split_data:
-        filepath = os.path.dirname(filename) + f"/{get_filename_from_path(filename).replace("/","")}_{split_name.replace("/","")}.xlsx"
+        
+        filename_without_slash = get_filename_from_path(filename).replace("/","")
+        
+        split_name_without_slash = split_name.replace("/","")
+        
+        filepath = os.path.dirname(filename) + f"/{filename_without_slash}_{split_name_without_slash}.xlsx"
         workbook.save(filepath)
         this_workbook = load_workbook(filepath, data_only=True)
 

@@ -10,7 +10,7 @@ def create_folder(path):
     os.makedirs(path)
 
 def generate_unique_foldername(client_requests):
-    client_ip = client_requests.remote_addr
+    client_ip = client_requests.remote_addr.replace(".", "")
 
     # 현재 시각 가져오기 (YYYYMMDD_HHMMSS 형식으로)
     current_time = datetime.now().strftime('%Y%m%d_%H%M%S') + f"_{datetime.now().microsecond}"
