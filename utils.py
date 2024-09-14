@@ -16,7 +16,7 @@ def generate_unique_foldername(client_requests):
     current_time = datetime.now().strftime('%Y%m%d_%H%M%S') + f"_{datetime.now().microsecond}"
 
     # 폴더 이름: IP주소_현재시각
-    folder_name = f"{client_ip.replace(".", "")}_{current_time}"
+    folder_name = f"{client_ip}_{current_time}"
 
     return folder_name
 
