@@ -15,6 +15,7 @@ const dropZone = document.getElementById('drop-zone');
 const fileInfo = document.getElementById('file-info');
 const fileName = document.getElementById('file-name');
 const fileSize = document.getElementById('file-size');
+const slideSize = document.getElementById('slide-size');
 const fileDescription = document.getElementById('file-description');
 
 
@@ -22,6 +23,8 @@ const fileDescription = document.getElementById('file-description');
 uploadButton.disabled = true;
 uploadButton.classList.add('hidden');
 downloadSection.classList.add('hidden');
+
+let slideCount = 0;
 
 
 dropZone.addEventListener('dragover', (event) => {
@@ -71,8 +74,8 @@ function fileValidation(files){
         alert("하나의 파일만 업로드 할 수 있습니다.");
         return false;
     } 
-    if(!files[0].name.endsWith(".xlsx") && !files[0].name.endsWith(".xls") ){
-        alert("엑셀파일(xlsx, xls 확장자)만 업로드 할 수 있습니다.");
+    if(!files[0].name.endsWith(".pptx")){
+        alert("PPT파일(pptx 확장자)만 업로드 할 수 있습니다.");
         return false;
     }
     return true
@@ -98,58 +101,44 @@ document.getElementById('excel-upload-form').addEventListener('submit', function
 
     const fileInput = document.getElementById('excel-file');
     const file = fileInput.files[0];  // 파일 참조
-    try {
 
-        if (!file) {
-            alert('파일을 선택해주세요.');
-            loadingSection.classList.add('hidden');
-            uploadButton.disabled = false;
-            return;
-        }
+    if (!file) {
+        alert('파일을 선택해주세요.');
+        loadingSection.classList.add('hidden');
+        uploadButton.disabled = false;
+        return;
+    }
 
-        const reader = new FileReader();
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const arrayBuffer = e.target.result;
 
-        // 파일 읽기 완료 시 동작
-        reader.onload = function(e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-
-            // 시트 이름 가져오기
-            const sheetNames = workbook.SheetNames;
-            console.log(sheetNames);
-            clearPreviousSettings();
-
-            // 각 시트의 데이터가 있는 컬럼(A, B, C...) 추출
-            sheetNames.forEach(sheetName => {
-                const worksheet = workbook.Sheets[sheetName];
-                const ref = XLSX.utils.decode_range(worksheet['!ref']);  // 시트의 전체 범위 가져오기
-                const columns = [];
-                
-                // 데이터가 있는 컬럼을 추출 (알파벳 표기 A, B, C...)
-                for (let col = ref.s.c; col <= ref.e.c; col++) {
-                    const colName = XLSX.utils.encode_col(col);  // A, B, C 등 컬럼명 추출
-                    columns.push(colName);  // 컬럼명 추가
-                }
-
-                // 동적으로 시트별 폼 추가
-                addSheetSetting(sheetName, columns);
+        JSZip.loadAsync(arrayBuffer).then(function(zip) {
+            // PPT 파일 구조에서 슬라이드는 ppt/slides/ 폴더 안에 저장됨
+            const slideFiles = Object.keys(zip.files).filter(function(fileName) {
+                return fileName.startsWith("ppt/slides/slide");
             });
 
-            // 로딩 애니메이션 숨기기
+            slideCount = slideFiles.length;
+            addForm();
+            slideSize.classList.remove('hidden');
+            slideSize.textContent = `총 슬라이드 : ${slideCount}장`;
             loadingSection.classList.add('hidden');
-            
-            // 시트 설정 폼과 쪼개기 버튼 표시
+
             sheetListSection.classList.remove('hidden');
             splitButton.classList.remove('hidden');
+            
             uploadButton.disabled = false;
-        };
+        }).catch(function(error) {
+            alert("PPT 파일을 처리하는 중 오류가 발생했습니다.");
+            loadingSection.classList.add('hidden');
+            uploadButton.disabled = false;
+        });
+    };
 
-        // 파일 읽기 시작
-        reader.readAsArrayBuffer(file);
-    } catch(error){
-        alert("손상된 파일입니다.");
-    }
+    reader.readAsArrayBuffer(file);
 });
+
 
 
 // 쪼개기 버튼 클릭 시
@@ -163,7 +152,7 @@ splitButton.addEventListener('click', function() {
     splittingLoadingSection.classList.remove('hidden');
 
     // 서버에 POST 요청
-    fetch('/split-excel', {
+    fetch('/ppt-extract', {
         method: 'POST',
         body: formData
     })
@@ -188,88 +177,46 @@ splitButton.addEventListener('click', function() {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('파일 쪼개기 중 오류가 발생했습니다.');
+        alert('PPT 분리 중 오류가 발생했습니다.');
         splittingLoadingSection.classList.add('hidden');
     });
 });
 
-function addSheetSetting(sheetName, columns) {    
+function addForm() {    
     const div = document.createElement('div');
     div.classList.add('sheet-setting');
     div.innerHTML = `
-        <div class="sheet-header">
-            <h3>${sheetName}</h3>
+        <div id="setting">
+            <label for="slide-number">고정 슬라이드 페이지 :</label>
+            <input type="number" id="slide-number" name="slide-number" value="1" min="1">
+
             <label class="toggle-label">
-                <span class="toggle-description">쪼개기</span> <!-- 토글 버튼 옆에 설명 추가 -->
-                <input type="checkbox" id="toggle-${sheetName}" name = "toggle-${sheetName}" checked>
+                <span class="toggle-description">대소문자 구분</span> <!-- 대소문자 구분 토글 버튼 -->
+                <input type="checkbox" id="case-sensitive-toggle" name="case-sensitive">
                 <span class="slider"></span>
             </label>
         </div>
-        <div id="setting-${sheetName}">
-            <label for="criteria-${sheetName}">기준 컬럼:</label>
-            <select id="criteria-${sheetName}" name = "select-${sheetName}">
-                ${columns.map(col => `<option value="${col}">${col}</option>`).join('')}
-            </select>
-            <label for="start-row-${sheetName}">시작 행:</label>
-            <input type="number" id="start-row-${sheetName}" name = "start-${sheetName}" value="1" min="1">
-        </div>
     `;
 
-    document.getElementById('split-settings-form').appendChild(div);
-
-    // 토글 스위치가 변경되면 컬럼 선택과 시작 행이 활성화/비활성화 됨
-    const toggle = document.getElementById(`toggle-${sheetName}`);
-    const settingsDiv = document.getElementById(`setting-${sheetName}`);
-
-    toggle.addEventListener('change', function() {
-        if (this.checked) {
-            // 쪼개기 대상일 경우 활성화
-            settingsDiv.querySelector('select').disabled = false;
-            settingsDiv.querySelector('input[type="number"]').disabled = false;
-        } else {
-            // 쪼개기 대상이 아닐 경우 비활성화
-            settingsDiv.querySelector('select').disabled = true;
-            settingsDiv.querySelector('input[type="number"]').disabled = true;
-        }
-    });
+    splitSettingsForm.appendChild(div);
 }
 
-
-function clearPreviousSettings() {
-    // 기존 설정을 모두 제거
-    const settingsForm = document.getElementById('split-settings-form');
-    while (settingsForm.firstChild) {
-        settingsForm.removeChild(settingsForm.firstChild);
-    }
-}
 
 function getFormData() {
-    const form = document.getElementById('split-settings-form');
-    const formData = new FormData(form);
+    const formData = new FormData(splitSettingsForm);
+    const exceptSlideNumber = document.getElementById("slide-number");
+    const capitalYn = document.getElementById("case-sensitive-toggle");
+
+    if (exceptSlideNumber > slideCount) {
+        alert("전체 슬라이드 수는 "+slideCount+"입니다. 제외 슬라이드를 다시 설정해주세요.");
+    }
+
+    formData.append('exceptSlideNumber', exceptSlideNumber);
+    formData.append('capitalYn', capitalYn);
 
     const file = fileInput.files[0];
     formData.append('file', file);  // 'file'은 서버에서 받을 필드명
-    
-    const sheetSettings = [];  // 최종적으로 서버에 보낼 리스트
 
-    // 모든 시트 설정 폼 데이터를 가져오기
-    document.querySelectorAll('.sheet-setting').forEach(div => {
-        const sheetName = div.querySelector('h3').innerText;  // 시트 이름
-        const splitToggle = formData.get(`toggle-${sheetName}`) ? 1 : 0;  // 쪼개기 여부 (체크박스)
-        const criteriaColumn = formData.get(`select-${sheetName}`);  // 기준 컬럼
-        const startRow = formData.get(`start-${sheetName}`);  // 시작 행
-
-        // 시트별 객체를 생성하여 배열에 추가
-        const sheetSetting = {
-            sheetName: sheetName,
-            startRow: parseInt(startRow, 10),  // 숫자로 변환
-            criteriaColumn: criteriaColumn,
-            split: splitToggle
-        };
-
-        sheetSettings.push(sheetSetting);
-    });
-    formData.append('sheets', JSON.stringify(sheetSettings));
     return formData;
 }
 

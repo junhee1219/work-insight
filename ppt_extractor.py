@@ -1,39 +1,30 @@
 from pptx import Presentation
-import tkinter as tk
-from tkinter import filedialog
-from tkinter import messagebox
 
-대소문자구분 = True
 
-def ppt추출함수(input_filename, search_text, keep_slides):
-    prs = Presentation(input_filename)
+def ppt추출함수(파일경로, 추출단어, 제외슬라이드번호, 대소문자구분):
+    prs = Presentation(파일경로)
     save_slide_ids = set()
     del_slides = set()
-    for slide_number in keep_slides:
+    for slide_number in 제외슬라이드번호:
         try:
             save_slide_ids.add(prs.slides[slide_number - 1].slide_id)
         except IndexError:
-            messagebox.showinfo("오류", f"{slide_number}번 슬라이드는 존재하지 않습니다.")
             return
     if 대소문자구분 :
         for slide in prs.slides:
             breaker = False
             for shape in slide.shapes:
                 if shape.has_text_frame:
-
-                    if shape.text and search_text in shape.text:
+                    if shape.text and 추출단어 in shape.text:
                         save_slide_ids.add(slide.slide_id)
                         breaker = True
                         break
-
                 if shape.has_table:
                     for row in shape.table.rows:
                         if breaker:
                             break
                         for cell in row.cells:
-
-                            if search_text in cell.text:
-
+                            if 추출단어 in cell.text:
                                 save_slide_ids.add(slide.slide_id)
                                 breaker = True
                                 break
@@ -42,7 +33,7 @@ def ppt추출함수(input_filename, search_text, keep_slides):
             breaker = False
             for shape in slide.shapes:
                 if shape.has_text_frame:
-                    if shape.text and search_text.upper() in shape.text.upper():
+                    if shape.text and 추출단어.upper() in shape.text.upper():
                         save_slide_ids.add(slide.slide_id)
                         breaker = True
                         break
@@ -51,7 +42,7 @@ def ppt추출함수(input_filename, search_text, keep_slides):
                         if breaker:
                             break
                         for cell in row.cells:
-                            if search_text.upper() in cell.text.upper():
+                            if 추출단어.upper() in cell.text.upper():
                                 save_slide_ids.add(slide.slide_id)
                                 breaker = True
                                 break
@@ -60,13 +51,6 @@ def ppt추출함수(input_filename, search_text, keep_slides):
             del_slides.add(slide)
     for i in del_slides:
         prs.slides._sldIdLst.remove(i)
-    prs.save(f"{search_text}.pptx")
+    prs.save(f"{추출단어}.pptx")
 
-
-def toggle(current_state):
-    global 대소문자구분
-    if current_state:
-        대소문자구분 = False
-    else:
-        대소문자구분 = True
 
