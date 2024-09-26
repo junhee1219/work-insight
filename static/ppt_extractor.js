@@ -93,6 +93,7 @@ function displayFileInfo(file) {
 
 // 파일 읽기 폼 제출 시 동작
 document.getElementById('excel-upload-form').addEventListener('submit', function(e) {
+    clearPreviousSettings();
     e.preventDefault();
     downloadSection.classList.add('hidden');
     // 로딩 애니메이션 표시
@@ -144,6 +145,8 @@ document.getElementById('excel-upload-form').addEventListener('submit', function
 // 쪼개기 버튼 클릭 시
 splitButton.addEventListener('click', function() {
     const formData = getFormData();
+
+    if (!formData) return;
     console.log(formData);
 
     // 로딩 애니메이션 (쪼개기 작업 중) 표시
@@ -187,11 +190,16 @@ function addForm() {
     div.classList.add('sheet-setting');
     div.innerHTML = `
         <div id="setting">
-            <label for="slide-number">고정 슬라이드 페이지 :</label>
-            <input type="number" id="slide-number" name="slide-number" value="1" min="1">
-
-            <label class="toggle-label">
-                <span class="toggle-description">대소문자 구분</span> <!-- 대소문자 구분 토글 버튼 -->
+            <label for="slide-number">유지할 슬라이드 번호<br>(쉼표 구분)</label>
+            <input type="text" id="slide-number" name="slide-number" style="width:150px;">
+        </div>
+        <div id="setting">
+            <label for="slide-keyword">추출 단어</label>
+            <input type="text" id="slide-keyword" name="slide-keyword" value="" style="width:150px;">
+        </div>
+        <div id="setting">
+            <label class="toggle-label" style="width:300px;">
+                <span class="toggle-description" style = "width:140px;">대소문자 구분</span> 
                 <input type="checkbox" id="case-sensitive-toggle" name="case-sensitive">
                 <span class="slider"></span>
             </label>
@@ -206,13 +214,22 @@ function getFormData() {
     const formData = new FormData(splitSettingsForm);
     const exceptSlideNumber = document.getElementById("slide-number");
     const capitalYn = document.getElementById("case-sensitive-toggle");
+    const keyword = document.getElementById("slide-keyword");
 
-    if (exceptSlideNumber > slideCount) {
-        alert("전체 슬라이드 수는 "+slideCount+"입니다. 제외 슬라이드를 다시 설정해주세요.");
+    const slideNumList = exceptSlideNumber.value.split(",")
+    let slideTrimNumList = [];
+    for(let i = 0; i < slideNumList.length ; i++){
+        let slideNo = slideNumList[i].trim();
+        if (slideNo > slideCount) {
+            alert("전체 슬라이드 수는 "+slideCount+"입니다. 제외 슬라이드를 다시 설정해주세요.");
+            return false;
+        }
+        slideTrimNumList.push(slideNo);
     }
 
-    formData.append('exceptSlideNumber', exceptSlideNumber);
-    formData.append('capitalYn', capitalYn);
+    formData.append('exceptSlideNumber', slideTrimNumList);
+    formData.append('keyword', keyword.value);
+    formData.append('capitalYn', capitalYn.value);
 
     const file = fileInput.files[0];
     formData.append('file', file);  // 'file'은 서버에서 받을 필드명
@@ -220,3 +237,8 @@ function getFormData() {
     return formData;
 }
 
+function clearPreviousSettings() {
+    while (splitSettingsForm.firstChild) {
+        splitSettingsForm.removeChild(splitSettingsForm.firstChild);
+    }
+}

@@ -9,6 +9,41 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='excel_seperator_styles.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
 </head>
+<style>
+    /* Badge Style */
+.badge {
+    background-color: #ffc107;
+    color: black;
+    padding: 5px 10px;
+    border-radius: 10px;
+    font-size: 1rem;
+    margin-left: 10px;
+}
+
+/* Form settings styling */
+#split-settings-form .sheet-setting {
+    display: flex;
+    flex-direction: column; /* Makes each setting in its own line */
+    gap: 20px;
+    padding: 20px 20px;
+}
+
+#split-settings-form label {
+    font-weight: bold;
+    width: 150px; /* 라벨의 고정 너비 설정 */
+    margin-right: 10px; /* 인풋과의 간격 */
+    display: inline-flex;
+}
+
+#split-settings-form input {
+    box-sizing: border-box; /* 패딩이 전체 width에 포함되도록 설정 */
+}
+
+#split-settings-form #setting {
+    justify-content: space-between;
+    align-items: center;
+}
+</style>
 <body>
     <header>
         <h1>PPT 추출 기능</h1>
@@ -27,7 +62,6 @@
                         <p>
                             <span id="file-name">파일명: </span>
                             <span id="file-size">파일 크기: </span>
-                            <span id="slide-size" class ="hidden">전체 슬라이드 수: </span>
                         </p>
                     </div>
                 </div>
@@ -43,7 +77,9 @@
 
         <!-- 시트 목록 표시 및 쪼개기 설정 폼 -->
         <section id="sheet-list-section" class="hidden">
-            <h2>PPT 추출 설정</h2>
+            <h2>PPT 추출 설정
+                <span id="slide-size" class="badge"></span> <!-- Yellow badge here -->
+            </h2>
             <form id="split-settings-form">
                 <!-- 서버에서 동적으로 시트와 관련된 필드가 여기에 추가됨 -->
             </form>
