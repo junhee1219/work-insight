@@ -3,6 +3,7 @@ from flask import Flask, request, render_template, send_file, jsonify
 import os
 import excel_seperator as es
 import ppt_extractor as pe
+import json
 
 app = Flask(__name__)
 
@@ -65,7 +66,7 @@ def split_excel():
     target_column_list = {}
     start_row_list = {}
     if sheets:
-        sheets = eval(sheets)  # JSON 형태로 받은 시트 설정을 파싱
+        sheets = json.loads(sheets)  # eval 대신 json.loads 사용
         for sheet in sheets:
             split = sheet.get("split")
             if split == 1:
