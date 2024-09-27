@@ -40,7 +40,9 @@ def split_main(filename, target_column_list, start_row_list):
         if target_column == "None":
             continue
         for row in range(start_row_list[split_name], max_row + 1):
-            split_data.add(sheet[f'{target_column}{row}'].value)  ## {target_column}{row} : A1 과 같은 형태
+            temp_val = sheet[f'{target_column}{row}'].value
+            if temp_val is not None:
+                split_data.add(temp_val)  ## {target_column}{row} : A1 과 같은 형태
         
     # split_data로부터 각 파일 생성 , 분리
     for split_name in split_data:
@@ -56,10 +58,10 @@ def split_main(filename, target_column_list, start_row_list):
         for sheet_name in sheet_list:
             cur_sheet = this_workbook[sheet_name]
             target_column = target_column_list.get(sheet_name, "None")
-            max_row = cur_sheet.max_row
-            start_row = start_row_list[sheet_name]
             if target_column == "None":
                 continue
+            max_row = cur_sheet.max_row
+            start_row = start_row_list[sheet_name]
             for sequence in reversed(get_delete_row(cur_sheet, target_column, split_name, max_row, start_row)):
                 cur_sheet.delete_rows(sequence[0],sequence[1])
         this_workbook.save(filepath)
