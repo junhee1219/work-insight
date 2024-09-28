@@ -153,8 +153,6 @@
         copyButton.addEventListener('click', function() {
             // textarea2의 내용을 클립보드에 복사
             navigator.clipboard.writeText(textarea2.value).then(function() {
-                console.log('클립보드에 복사되었습니다!');
-
                 // 복사 완료 메시지 표시
                 const copyMessage = document.getElementById('copy-message');
                 copyMessage.style.display = 'block';  // 메시지 표시
