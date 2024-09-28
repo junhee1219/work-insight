@@ -54,7 +54,7 @@ def ppt추출함수(파일경로, 추출단어, 제외슬라이드번호, 대소
             del_slides.add(slide)
     for i in del_slides:
         prs.slides._sldIdLst.remove(i)
-    최종파일경로 = f"{파일명}_{추출단어}.pptx"
+    최종파일경로 = f"{파일명.split(".")[0]}_{추출단어}.pptx"
     prs.save(최종파일경로)
     return 최종파일경로
 
