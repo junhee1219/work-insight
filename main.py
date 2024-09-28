@@ -23,6 +23,9 @@ def excel_seperator():
 @app.route('/ppt_extractor')
 def ppt_extractor():
     return render_template('ppt_extractor.html')  # 엑셀 쪼개기 페이지
+@app.route('/pdf_editor')
+def pdf_editor():
+    return render_template('pdf_editor.html')  # 엑셀 쪼개기 페이지
 
 @app.route('/ppt-extract', methods=['POST'])
 def ppt_extract():
