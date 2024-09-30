@@ -14,17 +14,6 @@ body {
     min-height: 100vh;
 }
 
-header {
-    text-align: center;
-    padding: 20px;
-    background: linear-gradient(90deg, #ff9a9e, #fad0c4);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    margin: 20px auto;
-    max-width: 800px;
-    color: #fff;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
 
 h1 {
     font-size: 1.5rem;
@@ -43,14 +32,15 @@ main {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px;
+    gap: 10px;
     max-width: 800px;
     width: 100%;
 }
 
 .button-container {
+    margin-top : 10px;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: 20px;
     justify-items: center;
     align-items: center;
@@ -61,7 +51,7 @@ main {
     justify-content: center;
     align-items: center;
     width: 150px;
-    height: 80px;
+    height: 50px;
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(15px);
     color: white;
@@ -129,6 +119,7 @@ textarea{
 
 .textarea-button{
     height: 50px !important;
+    width : 170px !important;
 }
 
  #copy-message {
