@@ -168,13 +168,9 @@ splitButton.addEventListener('click', function() {
     .then(blob => {
         fileBlob = blob;  // 받아온 파일 데이터를 전역 변수에 저장
         const url = window.URL.createObjectURL(fileBlob);
-        let downloadFileName = "result.zip";
-        try {
-            downloadFileName = fileName.textContent.split("파일명: ")[1].split(".")[0] + ".zip";  // 파일명만 추출
-        } catch (error) {
-            console.log(error);
-        }
         downloadLink.href = url;
+        downloadLink.download = "쪼개진.pptx"
+
         splittingLoadingSection.classList.add('hidden');
         downloadSection.classList.remove('hidden');
     })
